@@ -120,7 +120,7 @@
                 const app = await client("elw354/api-sentimen-umkm");
                 
                 // 4. Memanggil prediksi dari model IndoBERT
-                const response = await app.predict(0, [text]);
+                const response = await app.predict("/predict_sentiment", [text]);
 
                 console.log("Respon asli AI:", response);
                 const sentiment = response.data[0]; 
