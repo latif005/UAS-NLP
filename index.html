@@ -8,6 +8,23 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Desain Neo-Brutalism */
+        .keyword-container {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .keyword-tag {
+            background-color: #fff;
+            border: 2px solid #000;
+            padding: 5px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 2px 2px 0px #000;
+        }
         body {
             background-color: #f4f0e6;
             font-family: 'Space Grotesk', sans-serif;
@@ -133,6 +150,7 @@
             <textarea id="reviewText" placeholder="Ketik ulasan pelanggan di sini..."></textarea>
             <button id="btnAnalyze">Analisis Ulasan</button>
             <div id="result" class="result-box">Menunggu hasil...</div>
+            <div id="keywordBox" class="keyword-container"></div>
         </div>
 
         <div class="dashboard-container">
@@ -239,19 +257,33 @@
                 const app = await client("elw354/api-sentimen-umkm");
                 const response = await app.predict("/predict_sentiment", [text]);
                 
+                // Menangkap 2 balasan dari AI
                 const sentiment = response.data[0]; 
+                const keywords = response.data[1]; 
 
                 resultBox.innerText = "Hasil: " + sentiment;
                 
-                // Ubah warna kotak hasil
+                // Warnai kotak hasil
                 if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
                 else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
                 else resultBox.style.backgroundColor = "#fbbf24";
 
+                // Render Kata Kunci
+                const keywordDiv = document.getElementById('keywordBox');
+                keywordDiv.innerHTML = ""; // Bersihkan kata kunci sebelumnya
+                
+                if (keywords && keywords !== "Umum") {
+                    const keywordArray = keywords.split(", ");
+                    keywordArray.forEach(kw => {
+                        const span = document.createElement('span');
+                        span.className = 'keyword-tag';
+                        span.innerText = "#" + kw;
+                        keywordDiv.appendChild(span);
+                    });
+                }
+
                 // Perbarui Dashboard
                 updateDashboard(text, sentiment);
-
-                // Kosongkan input untuk ulasan berikutnya
                 reviewInput.value = "";
 
             } catch (error) {
