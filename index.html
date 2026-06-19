@@ -99,7 +99,7 @@
     <script>
         // Ganti URL ini dengan URL HuggingFace Space API-mu
         // Format: https://USERNAME-SPACENAME.hf.space/api/predict
-        const HUGGINGFACE_API_URL = "https://huggingface.co/spaces/elw354/api-sentimen-umkm";
+        const HUGGINGFACE_API_URL = "elw354/api-sentimen-umkm/predict_sentiment";
 
         async function analyzeSentiment() {
             const text = document.getElementById('reviewText').value;
@@ -114,27 +114,36 @@
             resultBox.style.backgroundColor = "#e5e7eb";
 
             try {
-                const response = await fetch(HUGGINGFACE_API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ data: [text] }) // Format payload Gradio API
-                });
+            const response = await fetch(HUGGINGFACE_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ data: [text] }) 
+            });
 
-                const json = await response.json();
-                const sentiment = json.data[0]; 
+            // Tambahkan baris ini untuk melacak error jika API tidak mengembalikan status 200 OK
+            if (!response.ok) {
+                throw new Error(`HTTP Error! Status: ${response.status}`);
+            }
 
-                resultBox.innerText = "Hasil: " + sentiment;
-                
-                // Ubah warna berdasarkan sentimen
-                if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
-                else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
-                else resultBox.style.backgroundColor = "#fbbf24";
+            const json = await response.json();
+            
+            // Console log ini akan membantu kita melihat bentuk asli balasan AI
+            console.log("Respon AI:", json);
+            
+            const sentiment = json.data[0]; 
 
-            } catch (error) {
-                resultBox.innerText = "Gagal menghubungi server AI.";
-                resultBox.style.backgroundColor = "#f87171";
-                console.error(error);
-            } finally {
+            resultBox.innerText = "Hasil: " + sentiment;
+            
+            // Ubah warna berdasarkan sentimen
+            if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
+            else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
+            else resultBox.style.backgroundColor = "#fbbf24";
+
+        } catch (error) {
+            resultBox.innerText = "Gagal menghubungi server AI.";
+            resultBox.style.backgroundColor = "#f87171";
+            console.error("Detail Error:", error); // Akan mencetak detail error di Console
+        } finally {
                 btn.innerText = "Analisis Ulasan";
             }
         }
