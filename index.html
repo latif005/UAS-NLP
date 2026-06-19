@@ -91,62 +91,55 @@
         
         <textarea id="reviewText" placeholder="Ketik ulasan pelanggan di sini... (misal: Barangnya sih bagus, tapi adminnya lambat balas)"></textarea>
         
-        <button id="btnAnalyze" onclick="analyzeSentiment()">Analisis Ulasan</button>
+        <button id="btnAnalyze">Analisis Ulasan</button>
         
         <div id="result" class="result-box">Menunggu hasil...</div>
     </div>
 
-    <script>
-        // Ganti URL ini dengan URL HuggingFace Space API-mu
-        // Format: https://USERNAME-SPACENAME.hf.space/api/predict
-        const HUGGINGFACE_API_URL = "https://elw354-api-sentimen-umkm.hf.space/api/predict";
+    <script type="module">
+        // 1. Mengimpor pustaka resmi Gradio Client
+        import { client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
-        async function analyzeSentiment() {
-            const text = document.getElementById('reviewText').value;
-            const resultBox = document.getElementById('result');
-            const btn = document.getElementById('btnAnalyze');
+        const btn = document.getElementById('btnAnalyze');
+        const reviewInput = document.getElementById('reviewText');
+        const resultBox = document.getElementById('result');
+
+        // 2. Memberikan instruksi saat tombol diklik
+        btn.addEventListener('click', async () => {
+            const text = reviewInput.value;
 
             if(!text) return alert("Ulasan tidak boleh kosong!");
 
             btn.innerText = "Menganalisis...";
             resultBox.style.display = "block";
-            resultBox.innerText = "Memproses data...";
+            resultBox.innerText = "Menghubungkan ke AI (mungkin butuh beberapa detik)...";
             resultBox.style.backgroundColor = "#e5e7eb";
 
             try {
-            const response = await fetch(HUGGINGFACE_API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ data: [text] }) 
-            });
+                // 3. Keajaiban Gradio Client: Cukup sebutkan username dan nama Space!
+                const app = await client("elw354/api-sentimen-umkm");
+                
+                // 4. Memanggil prediksi dari model IndoBERT
+                const response = await app.predict("/predict", [text]);
 
-            // Tambahkan baris ini untuk melacak error jika API tidak mengembalikan status 200 OK
-            if (!response.ok) {
-                throw new Error(`HTTP Error! Status: ${response.status}`);
-            }
+                console.log("Respon asli AI:", response);
+                const sentiment = response.data[0]; 
 
-            const json = await response.json();
-            
-            // Console log ini akan membantu kita melihat bentuk asli balasan AI
-            console.log("Respon AI:", json);
-            
-            const sentiment = json.data[0]; 
+                resultBox.innerText = "Hasil: " + sentiment;
+                
+                // 5. Mewarnai kotak hasil sesuai sentimen
+                if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
+                else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
+                else resultBox.style.backgroundColor = "#fbbf24";
 
-            resultBox.innerText = "Hasil: " + sentiment;
-            
-            // Ubah warna berdasarkan sentimen
-            if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
-            else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
-            else resultBox.style.backgroundColor = "#fbbf24";
-
-        } catch (error) {
-            resultBox.innerText = "Gagal menghubungi server AI.";
-            resultBox.style.backgroundColor = "#f87171";
-            console.error("Detail Error:", error); // Akan mencetak detail error di Console
-        } finally {
+            } catch (error) {
+                resultBox.innerText = "Gagal menghubungi server AI.";
+                resultBox.style.backgroundColor = "#f87171";
+                console.error("Detail Error:", error);
+            } finally {
                 btn.innerText = "Analisis Ulasan";
             }
-        }
+        });
     </script>
 </body>
 </html>
