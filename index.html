@@ -3,33 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analitik Ulasan | UMKM</title>
+    <title>AI Analitik Ulasan | UMKM Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Desain Neo-Brutalism */
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
-        
         body {
             background-color: #f4f0e6;
             font-family: 'Space Grotesk', sans-serif;
             color: #000;
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+            align-items: flex-start;
+            min-height: 100vh;
         }
 
-        .container {
-            background-color: #fff;
+        .main-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
             width: 100%;
-            max-width: 500px;
+            max-width: 1000px;
+        }
+
+        .container, .dashboard-container {
+            background-color: #fff;
             padding: 30px;
             border: 4px solid #000;
-            box-shadow: 12px 12px 0px #000;
+            box-shadow: 10px 10px 0px #000;
             border-radius: 8px;
+            flex: 1;
+            min-width: 300px;
         }
 
-        h1 {
+        h1, h2 {
             font-size: 24px;
             text-transform: uppercase;
             border-bottom: 4px solid #000;
@@ -51,7 +60,7 @@
         }
 
         button {
-            background-color: #ffde00; /* Kuning mencolok */
+            background-color: #ffde00;
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
             font-size: 18px;
@@ -73,7 +82,6 @@
         .result-box {
             margin-top: 25px;
             padding: 15px;
-            background-color: #a3e635; /* Hijau lime */
             border: 3px solid #000;
             font-weight: bold;
             font-size: 18px;
@@ -81,63 +89,177 @@
             display: none;
             box-shadow: 4px 4px 0px #000;
         }
+
+        /* Styling History List */
+        .history-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 3px solid #000;
+            background-color: #fafafa;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 2px solid #000;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border: 2px solid #000;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Radar Sentimen AI</h1>
-        <p>Deteksi otomatis komplain atau pujian pelanggan untuk menjaga performa bisnis.</p>
-        
-        <textarea id="reviewText" placeholder="Ketik ulasan pelanggan di sini... (misal: Barangnya sih bagus, tapi adminnya lambat balas)"></textarea>
-        
-        <button id="btnAnalyze">Analisis Ulasan</button>
-        
-        <div id="result" class="result-box">Menunggu hasil...</div>
+    <div class="main-wrapper">
+        <div class="container">
+            <h1>Radar Sentimen AI</h1>
+            <p>Deteksi otomatis komplain atau pujian pelanggan.</p>
+            
+            <textarea id="reviewText" placeholder="Ketik ulasan pelanggan di sini..."></textarea>
+            <button id="btnAnalyze">Analisis Ulasan</button>
+            <div id="result" class="result-box">Menunggu hasil...</div>
+        </div>
+
+        <div class="dashboard-container">
+            <h2>Statistik Kepuasan</h2>
+            <canvas id="sentimentChart" width="400" height="250"></canvas>
+            
+            <ul class="history-list" id="historyList">
+                <div style="padding: 10px; text-align: center; color: #666; font-style: italic;" id="emptyState">Belum ada data ulasan.</div>
+            </ul>
+        </div>
     </div>
 
     <script type="module">
-        // 1. Mengimpor pustaka resmi Gradio Client
         import { client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
         const btn = document.getElementById('btnAnalyze');
         const reviewInput = document.getElementById('reviewText');
         const resultBox = document.getElementById('result');
+        const historyList = document.getElementById('historyList');
+        const emptyState = document.getElementById('emptyState');
 
-        // 2. Memberikan instruksi saat tombol diklik
+        // Variabel untuk menyimpan hitungan sentimen
+        let sentimentCounts = {
+            Positif: 0,
+            Netral: 0,
+            Negatif: 0
+        };
+
+        // Inisialisasi Chart.js bergaya Neo-Brutalism
+        const ctx = document.getElementById('sentimentChart').getContext('2d');
+        const sentimentChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Positif', 'Netral', 'Negatif'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#a3e635', '#fbbf24', '#f87171'], // Hijau, Kuning, Merah
+                    borderColor: '#000',
+                    borderWidth: 3,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: { family: "'Space Grotesk', sans-serif", weight: 'bold', size: 14 },
+                            color: '#000'
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+
+        // Fungsi memperbarui Chart dan Riwayat
+        function updateDashboard(text, sentiment) {
+            // Hilangkan teks kosong
+            if (emptyState) emptyState.style.display = 'none';
+
+            let bgColor = "";
+            let shortLabel = "";
+
+            if (sentiment.includes("Positif")) {
+                sentimentCounts.Positif++;
+                bgColor = "#a3e635";
+                shortLabel = "POSITIF";
+            } else if (sentiment.includes("Negatif")) {
+                sentimentCounts.Negatif++;
+                bgColor = "#f87171";
+                shortLabel = "NEGATIF";
+            } else {
+                sentimentCounts.Netral++;
+                bgColor = "#fbbf24";
+                shortLabel = "NETRAL";
+            }
+
+            // Update grafik
+            sentimentChart.data.datasets[0].data = [sentimentCounts.Positif, sentimentCounts.Netral, sentimentCounts.Negatif];
+            sentimentChart.update();
+
+            // Tambah ke riwayat (di paling atas)
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            // Potong teks jika terlalu panjang
+            const truncatedText = text.length > 40 ? text.substring(0, 40) + "..." : text;
+            li.innerHTML = `<span>"${truncatedText}"</span> <span class="badge" style="background-color: ${bgColor}">${shortLabel}</span>`;
+            historyList.prepend(li);
+        }
+
+        // Proses Klik Tombol
         btn.addEventListener('click', async () => {
-            const text = reviewInput.value;
+            const text = reviewInput.value.trim();
 
             if(!text) return alert("Ulasan tidak boleh kosong!");
 
-            btn.innerText = "Menganalisis...";
+            btn.innerText = "MENGANALISIS...";
             resultBox.style.display = "block";
-            resultBox.innerText = "Menghubungkan ke AI (mungkin butuh beberapa detik)...";
+            resultBox.innerText = "Membaca teks...";
             resultBox.style.backgroundColor = "#e5e7eb";
 
             try {
-                // 3. Keajaiban Gradio Client: Cukup sebutkan username dan nama Space!
+                // Koneksi ke Hugging Face
                 const app = await client("elw354/api-sentimen-umkm");
-                
-                // 4. Memanggil prediksi dari model IndoBERT
                 const response = await app.predict("/predict_sentiment", [text]);
-
-                console.log("Respon asli AI:", response);
+                
                 const sentiment = response.data[0]; 
 
                 resultBox.innerText = "Hasil: " + sentiment;
                 
-                // 5. Mewarnai kotak hasil sesuai sentimen
+                // Ubah warna kotak hasil
                 if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
                 else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
                 else resultBox.style.backgroundColor = "#fbbf24";
 
+                // Perbarui Dashboard
+                updateDashboard(text, sentiment);
+
+                // Kosongkan input untuk ulasan berikutnya
+                reviewInput.value = "";
+
             } catch (error) {
-                resultBox.innerText = "Gagal menghubungi server AI.";
+                resultBox.innerText = "Gagal menghubungi AI.";
                 resultBox.style.backgroundColor = "#f87171";
                 console.error("Detail Error:", error);
             } finally {
-                btn.innerText = "Analisis Ulasan";
+                btn.innerText = "ANALISIS ULASAN";
             }
         });
     </script>
