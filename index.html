@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Analitik Ulasan | UMKM</title>
+    <style>
+        /* Desain Neo-Brutalism */
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+        
+        body {
+            background-color: #f4f0e6;
+            font-family: 'Space Grotesk', sans-serif;
+            color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            border: 4px solid #000;
+            box-shadow: 12px 12px 0px #000;
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 24px;
+            text-transform: uppercase;
+            border-bottom: 4px solid #000;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        textarea {
+            width: 95%;
+            height: 100px;
+            padding: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            border: 3px solid #000;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            resize: none;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        button {
+            background-color: #ffde00; /* Kuning mencolok */
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            text-transform: uppercase;
+            padding: 12px 20px;
+            width: 100%;
+            border: 3px solid #000;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 6px 6px 0px #000;
+            transition: all 0.2s ease;
+        }
+
+        button:active {
+            box-shadow: 0px 0px 0px #000;
+            transform: translate(6px, 6px);
+        }
+
+        .result-box {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #a3e635; /* Hijau lime */
+            border: 3px solid #000;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            display: none;
+            box-shadow: 4px 4px 0px #000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Radar Sentimen AI</h1>
+        <p>Deteksi otomatis komplain atau pujian pelanggan untuk menjaga performa bisnis.</p>
+        
+        <textarea id="reviewText" placeholder="Ketik ulasan pelanggan di sini... (misal: Barangnya sih bagus, tapi adminnya lambat balas)"></textarea>
+        
+        <button id="btnAnalyze" onclick="analyzeSentiment()">Analisis Ulasan</button>
+        
+        <div id="result" class="result-box">Menunggu hasil...</div>
+    </div>
+
+    <script>
+        // Ganti URL ini dengan URL HuggingFace Space API-mu
+        // Format: https://USERNAME-SPACENAME.hf.space/api/predict
+        const HUGGINGFACE_API_URL = "https://huggingface.co/spaces/elw354/api-sentimen-umkm";
+
+        async function analyzeSentiment() {
+            const text = document.getElementById('reviewText').value;
+            const resultBox = document.getElementById('result');
+            const btn = document.getElementById('btnAnalyze');
+
+            if(!text) return alert("Ulasan tidak boleh kosong!");
+
+            btn.innerText = "Menganalisis...";
+            resultBox.style.display = "block";
+            resultBox.innerText = "Memproses data...";
+            resultBox.style.backgroundColor = "#e5e7eb";
+
+            try {
+                const response = await fetch(HUGGINGFACE_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ data: [text] }) // Format payload Gradio API
+                });
+
+                const json = await response.json();
+                const sentiment = json.data[0]; 
+
+                resultBox.innerText = "Hasil: " + sentiment;
+                
+                // Ubah warna berdasarkan sentimen
+                if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
+                else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
+                else resultBox.style.backgroundColor = "#fbbf24";
+
+            } catch (error) {
+                resultBox.innerText = "Gagal menghubungi server AI.";
+                resultBox.style.backgroundColor = "#f87171";
+                console.error(error);
+            } finally {
+                btn.innerText = "Analisis Ulasan";
+            }
+        }
+    </script>
+</body>
+</html>
