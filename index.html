@@ -255,7 +255,7 @@
             try {
                 // Koneksi ke Hugging Face
                 const app = await client("elw354/api-sentimen-umkm");
-                const response = await app.predict("/predict_sentiment", [text]);
+                const response = await app.predict("/analyze_review", [text]);
                 
                 // Menangkap 2 balasan dari AI
                 const sentiment = response.data[0]; 
