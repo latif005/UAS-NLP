@@ -138,6 +138,23 @@
             font-weight: bold;
             font-size: 12px;
         }
+        .extra-metrics {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .metric-box {
+            flex: 1;
+            padding: 10px;
+            border: 3px solid #000;
+            background-color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            box-shadow: 4px 4px 0px #000;
+        }
     </style>
 </head>
 <body>
@@ -151,6 +168,10 @@
             <button id="btnAnalyze">Analisis Ulasan</button>
             <div id="result" class="result-box">Menunggu hasil...</div>
             <div id="keywordBox" class="keyword-container"></div>
+            <div class="extra-metrics">
+                <div id="emotionBox" class="metric-box">Emosi: -</div>
+                <div id="toxicityBox" class="metric-box">Konten: -</div>
+            </div>
         </div>
 
         <div class="dashboard-container">
@@ -253,36 +274,49 @@
             resultBox.style.backgroundColor = "#e5e7eb";
 
             try {
-                // Koneksi ke Hugging Face
+                // Koneksi ke API (Pastikan pakai nama endpoint yang benar, misal "/predict" atau 0)
                 const app = await client("elw354/api-sentimen-umkm");
-                const response = await app.predict("/analyze_review", [text]);
+                const response = await app.predict("/analyze_review", [text]); 
                 
-                // Menangkap 2 balasan dari AI
+                // Tangkap 4 balasan dari AI
                 const sentiment = response.data[0]; 
                 const keywords = response.data[1]; 
+                const emotion = response.data[2]; 
+                const toxicity = response.data[3]; 
 
                 resultBox.innerText = "Hasil: " + sentiment;
                 
-                // Warnai kotak hasil
+                // Warnai kotak sentimen
                 if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
                 else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
                 else resultBox.style.backgroundColor = "#fbbf24";
 
                 // Render Kata Kunci
                 const keywordDiv = document.getElementById('keywordBox');
-                keywordDiv.innerHTML = ""; // Bersihkan kata kunci sebelumnya
-                
+                keywordDiv.innerHTML = ""; 
                 if (keywords && keywords !== "Umum") {
                     const keywordArray = keywords.split(", ");
                     keywordArray.forEach(kw => {
                         const span = document.createElement('span');
                         span.className = 'keyword-tag';
-                        span.innerText = "#" + kw;
+                        span.innerText = "#" + kw.toUpperCase();
                         keywordDiv.appendChild(span);
                     });
                 }
 
-                // Perbarui Dashboard
+                // Render Emosi dan Toksisitas
+                document.getElementById('emotionBox').innerText = "Emosi: " + emotion;
+                
+                const toxBox = document.getElementById('toxicityBox');
+                toxBox.innerText = toxicity;
+                if (toxicity.includes("Rasis")) {
+                    toxBox.style.backgroundColor = "#f87171"; // Merah bahaya
+                    toxBox.style.color = "#fff";
+                } else {
+                    toxBox.style.backgroundColor = "#fff"; // Putih aman
+                    toxBox.style.color = "#000";
+                }
+
                 updateDashboard(text, sentiment);
                 reviewInput.value = "";
 
