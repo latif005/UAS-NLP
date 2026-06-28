@@ -8,22 +8,153 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Desain Neo-Brutalism */
-        .keyword-container { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        .keyword-tag { background-color: #fff; border: 2px solid #000; padding: 5px 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; box-shadow: 2px 2px 0px #000; }
-        body { background-color: #f4f0e6; font-family: 'Space Grotesk', sans-serif; color: #000; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
-        .main-wrapper { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1000px; }
-        .container, .dashboard-container { background-color: #fff; padding: 30px; border: 4px solid #000; box-shadow: 10px 10px 0px #000; border-radius: 8px; flex: 1; min-width: 300px; }
-        h1, h2 { font-size: 24px; text-transform: uppercase; border-bottom: 4px solid #000; padding-bottom: 10px; margin-top: 0; }
-        textarea { width: 95%; height: 100px; padding: 10px; font-family: 'Space Grotesk', sans-serif; font-size: 16px; border: 3px solid #000; border-radius: 4px; margin-bottom: 20px; resize: none; box-shadow: 4px 4px 0px #000; }
-        button { background-color: #ffde00; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; text-transform: uppercase; padding: 12px 20px; width: 100%; border: 3px solid #000; border-radius: 4px; cursor: pointer; box-shadow: 6px 6px 0px #000; transition: all 0.2s ease; }
-        button:active { box-shadow: 0px 0px 0px #000; transform: translate(6px, 6px); }
-        .result-box { margin-top: 25px; padding: 15px; border: 3px solid #000; font-weight: bold; font-size: 18px; text-align: center; display: none; box-shadow: 4px 4px 0px #000; }
-        .history-list { list-style-type: none; padding: 0; margin-top: 20px; max-height: 200px; overflow-y: auto; border: 3px solid #000; background-color: #fafafa; }
-        .history-item { padding: 10px; border-bottom: 2px solid #000; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .history-item:last-child { border-bottom: none; }
-        .badge { padding: 4px 8px; border: 2px solid #000; border-radius: 4px; font-weight: bold; font-size: 12px; }
-        .extra-metrics { display: flex; justify-content: space-between; margin-top: 15px; gap: 10px; }
-        .metric-box { flex: 1; padding: 10px; border: 3px solid #000; background-color: #fff; font-weight: bold; font-size: 14px; text-align: center; box-shadow: 4px 4px 0px #000; }
+        .keyword-container {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .keyword-tag {
+            background-color: #fff;
+            border: 2px solid #000;
+            padding: 5px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 2px 2px 0px #000;
+        }
+        body {
+            background-color: #f4f0e6;
+            font-family: 'Space Grotesk', sans-serif;
+            color: #000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .main-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .container, .dashboard-container {
+            background-color: #fff;
+            padding: 30px;
+            border: 4px solid #000;
+            box-shadow: 10px 10px 0px #000;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        h1, h2 {
+            font-size: 24px;
+            text-transform: uppercase;
+            border-bottom: 4px solid #000;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        textarea {
+            width: 95%;
+            height: 100px;
+            padding: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            border: 3px solid #000;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            resize: none;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        button {
+            background-color: #ffde00;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            text-transform: uppercase;
+            padding: 12px 20px;
+            width: 100%;
+            border: 3px solid #000;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 6px 6px 0px #000;
+            transition: all 0.2s ease;
+        }
+
+        button:active {
+            box-shadow: 0px 0px 0px #000;
+            transform: translate(6px, 6px);
+        }
+
+        .result-box {
+            margin-top: 25px;
+            padding: 15px;
+            border: 3px solid #000;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            display: none;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        /* Styling History List */
+        .history-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 3px solid #000;
+            background-color: #fafafa;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 2px solid #000;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border: 2px solid #000;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .extra-metrics {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .metric-box {
+            flex: 1;
+            padding: 10px;
+            border: 3px solid #000;
+            background-color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            box-shadow: 4px 4px 0px #000;
+        }
     </style>
 </head>
 <body>
@@ -53,15 +184,23 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+
         const btn = document.getElementById('btnAnalyze');
         const reviewInput = document.getElementById('reviewText');
         const resultBox = document.getElementById('result');
         const historyList = document.getElementById('historyList');
         const emptyState = document.getElementById('emptyState');
 
-        let sentimentCounts = { Positif: 0, Netral: 0, Negatif: 0 };
+        // Variabel untuk menyimpan hitungan sentimen
+        let sentimentCounts = {
+            Positif: 0,
+            Netral: 0,
+            Negatif: 0
+        };
 
+        // Inisialisasi Chart.js bergaya Neo-Brutalism
         const ctx = document.getElementById('sentimentChart').getContext('2d');
         const sentimentChart = new Chart(ctx, {
             type: 'doughnut',
@@ -69,7 +208,7 @@
                 labels: ['Positif', 'Netral', 'Negatif'],
                 datasets: [{
                     data: [0, 0, 0],
-                    backgroundColor: ['#a3e635', '#fbbf24', '#f87171'],
+                    backgroundColor: ['#a3e635', '#fbbf24', '#f87171'], // Hijau, Kuning, Merah
                     borderColor: '#000',
                     borderWidth: 3,
                     hoverOffset: 4
@@ -77,36 +216,53 @@
             },
             options: {
                 plugins: {
-                    legend: { labels: { font: { family: "'Space Grotesk', sans-serif", weight: 'bold', size: 14 }, color: '#000' } }
+                    legend: {
+                        labels: {
+                            font: { family: "'Space Grotesk', sans-serif", weight: 'bold', size: 14 },
+                            color: '#000'
+                        }
+                    }
                 },
                 cutout: '60%'
             }
         });
 
+        // Fungsi memperbarui Chart dan Riwayat
         function updateDashboard(text, sentiment) {
+            // Hilangkan teks kosong
             if (emptyState) emptyState.style.display = 'none';
 
             let bgColor = "";
             let shortLabel = "";
 
             if (sentiment.includes("Positif")) {
-                sentimentCounts.Positif++; bgColor = "#a3e635"; shortLabel = "POSITIF";
+                sentimentCounts.Positif++;
+                bgColor = "#a3e635";
+                shortLabel = "POSITIF";
             } else if (sentiment.includes("Negatif")) {
-                sentimentCounts.Negatif++; bgColor = "#f87171"; shortLabel = "NEGATIF";
+                sentimentCounts.Negatif++;
+                bgColor = "#f87171";
+                shortLabel = "NEGATIF";
             } else {
-                sentimentCounts.Netral++; bgColor = "#fbbf24"; shortLabel = "NETRAL";
+                sentimentCounts.Netral++;
+                bgColor = "#fbbf24";
+                shortLabel = "NETRAL";
             }
 
+            // Update grafik
             sentimentChart.data.datasets[0].data = [sentimentCounts.Positif, sentimentCounts.Netral, sentimentCounts.Negatif];
             sentimentChart.update();
 
+            // Tambah ke riwayat (di paling atas)
             const li = document.createElement('li');
             li.className = 'history-item';
+            // Potong teks jika terlalu panjang
             const truncatedText = text.length > 40 ? text.substring(0, 40) + "..." : text;
             li.innerHTML = `<span>"${truncatedText}"</span> <span class="badge" style="background-color: ${bgColor}">${shortLabel}</span>`;
             historyList.prepend(li);
         }
 
+        // Proses Klik Tombol
         btn.addEventListener('click', async () => {
             const text = reviewInput.value.trim();
 
@@ -118,33 +274,24 @@
             resultBox.style.backgroundColor = "#e5e7eb";
 
             try {
-                // PAKAI FETCH MURNI (ANTI CORS)
-                const response = await fetch("https://elw354-api-sentimen-umkm.hf.space/api/predict", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        data: [text]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error("Gagal mengambil data dari server");
-                }
-
-                const result = await response.json();
+                // Koneksi ke API (Pastikan pakai nama endpoint yang benar, misal "/predict" atau 0)
+                const app = await client("elw354/api-sentimen-umkm");
+                const response = await app.predict("/analyze_review", [text]); 
                 
-                // Tangkap balasan AI
-                const sentiment = result.data[0]; 
-                const keywords = result.data[1]; 
-                const emotion = result.data[2]; 
-                const toxicity = result.data[3]; 
+                // Tangkap 4 balasan dari AI
+                const sentiment = response.data[0]; 
+                const keywords = response.data[1]; 
+                const emotion = response.data[2]; 
+                const toxicity = response.data[3]; 
 
                 resultBox.innerText = "Hasil: " + sentiment;
                 
+                // Warnai kotak sentimen
                 if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
                 else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
                 else resultBox.style.backgroundColor = "#fbbf24";
 
+                // Render Kata Kunci
                 const keywordDiv = document.getElementById('keywordBox');
                 keywordDiv.innerHTML = ""; 
                 if (keywords && keywords !== "Umum") {
@@ -157,15 +304,16 @@
                     });
                 }
 
+                // Render Emosi dan Toksisitas
                 document.getElementById('emotionBox').innerText = "Emosi: " + emotion;
                 
                 const toxBox = document.getElementById('toxicityBox');
                 toxBox.innerText = toxicity;
                 if (toxicity.includes("Rasis")) {
-                    toxBox.style.backgroundColor = "#f87171"; 
+                    toxBox.style.backgroundColor = "#f87171"; // Merah bahaya
                     toxBox.style.color = "#fff";
                 } else {
-                    toxBox.style.backgroundColor = "#fff"; 
+                    toxBox.style.backgroundColor = "#fff"; // Putih aman
                     toxBox.style.color = "#000";
                 }
 
