@@ -184,55 +184,150 @@
         </div>
     </div>
 
-    <script>
-    const btn = document.getElementById('btnAnalyze');
-    const reviewInput = document.getElementById('reviewText');
-    const resultBox = document.getElementById('result');
-    const historyList = document.getElementById('historyList');
-    const emptyState = document.getElementById('emptyState');
-    let sentimentCounts = { Positif: 0, Netral: 0, Negatif: 0 };
+    <script type="module">
+        import { client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
-    // Inisialisasi Chart.js tetap sama...
-    // [Gunakan kode inisialisasi chart Anda yang lama di sini]
+        const btn = document.getElementById('btnAnalyze');
+        const reviewInput = document.getElementById('reviewText');
+        const resultBox = document.getElementById('result');
+        const historyList = document.getElementById('historyList');
+        const emptyState = document.getElementById('emptyState');
 
-    btn.addEventListener('click', async () => {
-        const text = reviewInput.value.trim();
-        if(!text) return alert("Ulasan tidak boleh kosong!");
+        // Variabel untuk menyimpan hitungan sentimen
+        let sentimentCounts = {
+            Positif: 0,
+            Netral: 0,
+            Negatif: 0
+        };
 
-        btn.innerText = "MENGANALISIS...";
-        resultBox.style.display = "block";
-        resultBox.innerText = "Membaca teks...";
+        // Inisialisasi Chart.js bergaya Neo-Brutalism
+        const ctx = document.getElementById('sentimentChart').getContext('2d');
+        const sentimentChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Positif', 'Netral', 'Negatif'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#a3e635', '#fbbf24', '#f87171'], // Hijau, Kuning, Merah
+                    borderColor: '#000',
+                    borderWidth: 3,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: { family: "'Space Grotesk', sans-serif", weight: 'bold', size: 14 },
+                            color: '#000'
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
 
-        try {
-            // PANGGIL API LANGSUNG TANPA GRADIO CLIENT
-            const response = await fetch("https://elw354-api-sentimen-umkm.hf.space/run/predict", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                // KUNCI UTAMA: Omit credentials agar tidak kena CORS
-                credentials: "omit", 
-                body: JSON.stringify({
-                    data: [text]
-                })
-            });
+        // Fungsi memperbarui Chart dan Riwayat
+        function updateDashboard(text, sentiment) {
+            // Hilangkan teks kosong
+            if (emptyState) emptyState.style.display = 'none';
 
-            if (!response.ok) throw new Error("Server error " + response.status);
+            let bgColor = "";
+            let shortLabel = "";
 
-            const result = await response.json();
-            
-            // Gradio mengembalikan data dalam format { data: [...] }
-            const [sentiment, keywords, emotion, toxicity] = result.data;
+            if (sentiment.includes("Positif")) {
+                sentimentCounts.Positif++;
+                bgColor = "#a3e635";
+                shortLabel = "POSITIF";
+            } else if (sentiment.includes("Negatif")) {
+                sentimentCounts.Negatif++;
+                bgColor = "#f87171";
+                shortLabel = "NEGATIF";
+            } else {
+                sentimentCounts.Netral++;
+                bgColor = "#fbbf24";
+                shortLabel = "NETRAL";
+            }
 
-            // Render hasil ke UI (Gunakan kode render Anda yang lama)
-            resultBox.innerText = "Hasil: " + sentiment;
-            // ... (sisa logika pewarnaan dan chart Anda)
+            // Update grafik
+            sentimentChart.data.datasets[0].data = [sentimentCounts.Positif, sentimentCounts.Netral, sentimentCounts.Negatif];
+            sentimentChart.update();
 
-        } catch (error) {
-            resultBox.innerText = "Gagal menghubungi AI.";
-            console.error("Detail Error:", error);
-        } finally {
-            btn.innerText = "ANALISIS ULASAN";
+            // Tambah ke riwayat (di paling atas)
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            // Potong teks jika terlalu panjang
+            const truncatedText = text.length > 40 ? text.substring(0, 40) + "..." : text;
+            li.innerHTML = `<span>"${truncatedText}"</span> <span class="badge" style="background-color: ${bgColor}">${shortLabel}</span>`;
+            historyList.prepend(li);
         }
-    });
-</script>
+
+        // Proses Klik Tombol
+        btn.addEventListener('click', async () => {
+            const text = reviewInput.value.trim();
+
+            if(!text) return alert("Ulasan tidak boleh kosong!");
+
+            btn.innerText = "MENGANALISIS...";
+            resultBox.style.display = "block";
+            resultBox.innerText = "Membaca teks...";
+            resultBox.style.backgroundColor = "#e5e7eb";
+
+            try {
+                // Koneksi ke API (Pastikan pakai nama endpoint yang benar, misal "/predict" atau 0)
+                const app = await client("elw354/api-sentimen-umkm");
+                const response = await app.predict("/analyze_review", [text]); 
+                
+                // Tangkap 4 balasan dari AI
+                const sentiment = response.data[0]; 
+                const keywords = response.data[1]; 
+                const emotion = response.data[2]; 
+                const toxicity = response.data[3]; 
+
+                resultBox.innerText = "Hasil: " + sentiment;
+                
+                // Warnai kotak sentimen
+                if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
+                else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
+                else resultBox.style.backgroundColor = "#fbbf24";
+
+                // Render Kata Kunci
+                const keywordDiv = document.getElementById('keywordBox');
+                keywordDiv.innerHTML = ""; 
+                if (keywords && keywords !== "Umum") {
+                    const keywordArray = keywords.split(", ");
+                    keywordArray.forEach(kw => {
+                        const span = document.createElement('span');
+                        span.className = 'keyword-tag';
+                        span.innerText = "#" + kw.toUpperCase();
+                        keywordDiv.appendChild(span);
+                    });
+                }
+
+                // Render Emosi dan Toksisitas
+                document.getElementById('emotionBox').innerText = "Emosi: " + emotion;
+                
+                const toxBox = document.getElementById('toxicityBox');
+                toxBox.innerText = toxicity;
+                if (toxicity.includes("Rasis")) {
+                    toxBox.style.backgroundColor = "#f87171"; // Merah bahaya
+                    toxBox.style.color = "#fff";
+                } else {
+                    toxBox.style.backgroundColor = "#fff"; // Putih aman
+                    toxBox.style.color = "#000";
+                }
+
+                updateDashboard(text, sentiment);
+                reviewInput.value = "";
+
+            } catch (error) {
+                resultBox.innerText = "Gagal menghubungi AI.";
+                resultBox.style.backgroundColor = "#f87171";
+                console.error("Detail Error:", error);
+            } finally {
+                btn.innerText = "ANALISIS ULASAN";
+            }
+        });
+    </script>
 </body>
 </html>
