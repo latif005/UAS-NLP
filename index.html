@@ -184,17 +184,17 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+
         const btn = document.getElementById('btnAnalyze');
         const reviewInput = document.getElementById('reviewText');
         const resultBox = document.getElementById('result');
         const historyList = document.getElementById('historyList');
         const emptyState = document.getElementById('emptyState');
 
-        // Variabel untuk menyimpan hitungan sentimen
         let sentimentCounts = { Positif: 0, Netral: 0, Negatif: 0 };
 
-        // Inisialisasi Chart.js bergaya Neo-Brutalism
         const ctx = document.getElementById('sentimentChart').getContext('2d');
         const sentimentChart = new Chart(ctx, {
             type: 'doughnut',
@@ -202,7 +202,7 @@
                 labels: ['Positif', 'Netral', 'Negatif'],
                 datasets: [{
                     data: [0, 0, 0],
-                    backgroundColor: ['#a3e635', '#fbbf24', '#f87171'], // Hijau, Kuning, Merah
+                    backgroundColor: ['#a3e635', '#fbbf24', '#f87171'], 
                     borderColor: '#000',
                     borderWidth: 3,
                     hoverOffset: 4
@@ -210,36 +210,19 @@
             },
             options: {
                 plugins: {
-                    legend: {
-                        labels: {
-                            font: { family: "'Space Grotesk', sans-serif", weight: 'bold', size: 14 },
-                            color: '#000'
-                        }
-                    }
+                    legend: { labels: { font: { family: "'Space Grotesk', sans-serif", weight: 'bold', size: 14 }, color: '#000' } }
                 },
                 cutout: '60%'
             }
         });
 
-        // Fungsi memperbarui Chart dan Riwayat
         function updateDashboard(text, sentiment) {
             if (emptyState) emptyState.style.display = 'none';
-            let bgColor = "";
-            let shortLabel = "";
+            let bgColor = "", shortLabel = "";
 
-            if (sentiment.includes("Positif")) {
-                sentimentCounts.Positif++;
-                bgColor = "#a3e635";
-                shortLabel = "POSITIF";
-            } else if (sentiment.includes("Negatif")) {
-                sentimentCounts.Negatif++;
-                bgColor = "#f87171";
-                shortLabel = "NEGATIF";
-            } else {
-                sentimentCounts.Netral++;
-                bgColor = "#fbbf24";
-                shortLabel = "NETRAL";
-            }
+            if (sentiment.includes("Positif")) { sentimentCounts.Positif++; bgColor = "#a3e635"; shortLabel = "POSITIF"; }
+            else if (sentiment.includes("Negatif")) { sentimentCounts.Negatif++; bgColor = "#f87171"; shortLabel = "NEGATIF"; }
+            else { sentimentCounts.Netral++; bgColor = "#fbbf24"; shortLabel = "NETRAL"; }
 
             sentimentChart.data.datasets[0].data = [sentimentCounts.Positif, sentimentCounts.Netral, sentimentCounts.Negatif];
             sentimentChart.update();
@@ -251,10 +234,8 @@
             historyList.prepend(li);
         }
 
-        // Proses Klik Tombol menggunakan Native Fetch (Anti-CORS Error)
         btn.addEventListener('click', async () => {
             const text = reviewInput.value.trim();
-
             if(!text) return alert("Ulasan tidak boleh kosong!");
 
             btn.innerText = "MENGANALISIS...";
@@ -263,41 +244,27 @@
             resultBox.style.backgroundColor = "#e5e7eb";
 
             try {
-                // Melakukan HTTP POST murni ke endpoint Hugging Face
-                // Endpoint disesuaikan dengan nama fungsi /analyze_review Anda
-                const response = await fetch("https://elw354-api-sentimen-umkm.hf.space/run/analyze_review", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        data: [text]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error("Gagal mengambil data dari server AI");
-                }
-
-                const result = await response.json();
+                // Sekarang setelah HF Public, Gradio Client akan bekerja sempurna
+                const app = await client("elw354/api-sentimen-umkm");
                 
-                // Menangkap 4 output dari backend
-                const sentiment = result.data[0]; 
-                const keywords = result.data[1]; 
-                const emotion = result.data[2]; 
-                const toxicity = result.data[3]; 
+                // Pastikan nama "/analyze_review" sama dengan nama API di Python Anda
+                const response = await app.predict("/analyze_review", [text]); 
+                
+                const sentiment = response.data[0]; 
+                const keywords = response.data[1]; 
+                const emotion = response.data[2]; 
+                const toxicity = response.data[3]; 
 
                 resultBox.innerText = "Hasil: " + sentiment;
                 
-                // Warnai kotak sentimen
                 if (sentiment.includes("Positif")) resultBox.style.backgroundColor = "#a3e635";
                 else if (sentiment.includes("Negatif")) resultBox.style.backgroundColor = "#f87171";
                 else resultBox.style.backgroundColor = "#fbbf24";
 
-                // Render Kata Kunci
                 const keywordDiv = document.getElementById('keywordBox');
                 keywordDiv.innerHTML = ""; 
                 if (keywords && keywords !== "Umum") {
-                    const keywordArray = keywords.split(", ");
-                    keywordArray.forEach(kw => {
+                    keywords.split(", ").forEach(kw => {
                         const span = document.createElement('span');
                         span.className = 'keyword-tag';
                         span.innerText = "#" + kw.toUpperCase();
@@ -305,17 +272,14 @@
                     });
                 }
 
-                // Render Emosi dan Toksisitas
                 document.getElementById('emotionBox').innerText = "Emosi: " + emotion;
                 
                 const toxBox = document.getElementById('toxicityBox');
                 toxBox.innerText = toxicity;
                 if (toxicity.includes("Rasis") || toxicity.includes("Toksik")) {
-                    toxBox.style.backgroundColor = "#f87171"; // Merah bahaya
-                    toxBox.style.color = "#fff";
+                    toxBox.style.backgroundColor = "#f87171"; toxBox.style.color = "#fff";
                 } else {
-                    toxBox.style.backgroundColor = "#fff"; // Putih aman
-                    toxBox.style.color = "#000";
+                    toxBox.style.backgroundColor = "#fff"; toxBox.style.color = "#000";
                 }
 
                 updateDashboard(text, sentiment);
