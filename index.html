@@ -279,12 +279,19 @@
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         // HAPUS credentials: 'include' — ini penyebab CORS error!
-                        body: JSON.stringify({ data: [text] })
+                        body: JSON.stringify({ 
+                            fn_index: 0,
+                            data: [text] })
                     }
                 );
-                const result = await response.json(); 
+                const result = await response.json();
+                console.log("Full response:", result); // DEBUG dulu
                 
-                // Tangkap 4 balasan dari AI
+                // Cek apakah data ada sebelum diakses
+                if (!result.data) {
+                    throw new Error("Response tidak valid: " + JSON.stringify(result));
+                }
+                
                 const sentiment = result.data[0]; 
                 const keywords = result.data[1]; 
                 const emotion = result.data[2]; 
