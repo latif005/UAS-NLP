@@ -184,9 +184,7 @@
         </div>
     </div>
 
-    <script type="module">
-        import { client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
-
+    <script>
         const btn = document.getElementById('btnAnalyze');
         const reviewInput = document.getElementById('reviewText');
         const resultBox = document.getElementById('result');
@@ -209,9 +207,7 @@
                 }]
             },
             options: {
-                plugins: {
-                    legend: { labels: { font: { family: "'Space Grotesk', sans-serif", weight: 'bold', size: 14 }, color: '#000' } }
-                },
+                plugins: { legend: { labels: { font: { family: "'Space Grotesk', sans-serif", weight: 'bold', size: 14 }, color: '#000' } } },
                 cutout: '60%'
             }
         });
@@ -244,16 +240,29 @@
             resultBox.style.backgroundColor = "#e5e7eb";
 
             try {
-                // Sekarang setelah HF Public, Gradio Client akan bekerja sempurna
-                const app = await client("elw354/api-sentimen-umkm");
+                // GANTI URL INI JIKA DI TOMBOL "USE VIA API" BERBEDA
+                const apiUrl = "https://elw354-api-sentimen-umkm.hf.space/api/predict";
+
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "omit", // <--- INI ADALAH OBAT ANTI-CORS
+                    body: JSON.stringify({
+                        data: [text]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server membalas dengan status: ${response.status}`);
+                }
+
+                const result = await response.json();
                 
-                // Pastikan nama "/analyze_review" sama dengan nama API di Python Anda
-                const response = await app.predict("/analyze_review", [text]); 
-                
-                const sentiment = response.data[0]; 
-                const keywords = response.data[1]; 
-                const emotion = response.data[2]; 
-                const toxicity = response.data[3]; 
+                // Menangkap output (sesuaikan urutan array dengan return dari app.py Anda)
+                const sentiment = result.data[0]; 
+                const keywords = result.data[1]; 
+                const emotion = result.data[2]; 
+                const toxicity = result.data[3]; 
 
                 resultBox.innerText = "Hasil: " + sentiment;
                 
