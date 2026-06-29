@@ -275,7 +275,7 @@
 
             try {
                 // Koneksi ke API (Pastikan pakai nama endpoint yang benar, misal "/predict" atau 0)
-                const app = await client("elw354/api-sentimen-umkm");
+                const app = await client("elw354/api-sentimen");
                 const response = await app.predict("/analyze_review", [text]); 
                 
                 // Tangkap 4 balasan dari AI
